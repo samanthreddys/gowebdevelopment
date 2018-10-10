@@ -1,0 +1,10 @@
+#Folders
+_obj
+_test
+
+#extensions
+
+*.exe
+
+mac hidden folders files
+.DS_Store

@@ -10,6 +10,8 @@ _test
 mac hidden folders files
 .DS_Store
 =======
+# ignore binaries
+myweb.com
 # Binaries for programs and plugins
 *.exe
 *.exe~

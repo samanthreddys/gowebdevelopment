@@ -12,7 +12,7 @@ func main() {
 }
 
 func handlerFunc(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Content-Type", "text/plain")
 	fmt.Fprint(w, "<h1>Welcome to Web Server Development</h1>")
 
 }

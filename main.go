@@ -21,7 +21,7 @@ func faqs(w http.ResponseWriter, r *http.Request) {
 func home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	err := homeView.Template.ExecuteTemplate(w, homeView.Layout, nil)
-	fmt.Println("Layout Referred:", homeView.Layout)
+	//fmt.Println("Layout Referred:", homeView.Layout, w)
 	if err != nil {
 		panic(err)
 	}

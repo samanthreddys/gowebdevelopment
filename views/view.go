@@ -11,6 +11,11 @@ type View struct {
 	Layout   string
 }
 
+var (
+	layoutDir         = "views/layouts/"
+	templateExtension = ".gohtml"
+)
+
 //NewView function
 func NewView(layout string, files ...string) *View {
 
@@ -28,7 +33,7 @@ func NewView(layout string, files ...string) *View {
 
 //layout files returns a slice of strings representing files
 func layoutFiles() []string {
-	files, err := filepath.Glob("views/layouts/*.gohtml")
+	files, err := filepath.Glob(layoutDir + "*" + templateExtension)
 	if err != nil {
 		panic(err)
 	}

@@ -2,6 +2,7 @@ package views
 
 import (
 	"html/template"
+	"net/http"
 	"path/filepath"
 )
 
@@ -15,6 +16,11 @@ var (
 	layoutDir         = "views/layouts/"
 	templateExtension = ".gohtml"
 )
+
+// Render is used to render view
+func (v *View) Render(w http.ResponseWriter, data interface{}) error {
+	return v.Template.ExecuteTemplate(w, v.Layout, data)
+}
 
 //NewView function
 func NewView(layout string, files ...string) *View {

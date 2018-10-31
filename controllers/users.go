@@ -21,7 +21,7 @@ type SignUpForm struct {
 //NewUsers function
 func NewUsers() *Users {
 	return &Users{
-		NewView: views.NewView("bootstrap", "views/users/signup.gohtml"),
+		NewView: views.NewView("bootstrap", "users/signup"),
 	}
 }
 

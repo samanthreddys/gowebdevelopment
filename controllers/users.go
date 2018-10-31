@@ -28,13 +28,11 @@ func NewUsers() *Users {
 //New  GET/signup...
 // New Method to GET signup This is used to render a form when user click on a signup form
 func (u *Users) New(w http.ResponseWriter, r *http.Request) {
-	//fmt.Println("Is this called?")
+
 	if err := u.NewView.Render(w, nil); err != nil {
 		panic(err)
 
 	}
-
-	//	u.NewView.Render(w, nil)
 
 }
 

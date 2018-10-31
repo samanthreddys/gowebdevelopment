@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/schema"
 	"github.com/samanthreddys/myweb.com/views"
 )
 
@@ -42,18 +41,14 @@ func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 //Create Used to create user
 //POST SIGNUP
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		panic(err)
 
-	}
 	var form SignUpForm
-	decoder := schema.NewDecoder()
-	if err := decoder.Decode(&form, r.PostForm); err != nil {
+	if err := ParseForm(r, &form); err != nil {
 		panic(err)
 	}
+
 	fmt.Fprintln(w, form)
 	fmt.Fprintln(w, r.PostForm["email"])
 	fmt.Fprintln(w, r.PostForm["password"])
 
-	fmt.Fprintln(w, "This is creating a user account")
 }

@@ -52,7 +52,6 @@ func (v *View) Render(w http.ResponseWriter, data interface{}) error {
 func NewView(layout string, files ...string) *View {
 	addTemplatePath(files)
 	addTemplateExtFile(files)
-	//fmt.Println(files)
 
 	files = append(files, layoutFiles()...)
 	t, err := template.ParseFiles(files...)

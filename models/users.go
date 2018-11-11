@@ -47,9 +47,20 @@ func (us *UserService) Close() error {
 }
 
 // DestructiveReset is used to drop table if it exists
-func (us *UserService) DestructiveReset() {
-	us.db.DropTableIfExists(&User{})
-	us.db.AutoMigrate(&User{})
+func (us *UserService) DestructiveReset() error {
+	if err := us.db.DropTableIfExists(&User{}).Error; err != nil {
+		panic(err)
+	}
+	return us.AutoMigrate()
+}
+
+//AutoMigrate will attempt to automatically migrate users table
+func (us *UserService) AutoMigrate() error {
+	if err := us.db.AutoMigrate(&User{}).Error; err != nil {
+		panic(err)
+	}
+
+	return nil
 }
 
 //Create user in user

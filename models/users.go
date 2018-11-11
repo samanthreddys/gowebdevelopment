@@ -19,6 +19,8 @@ type User struct {
 var (
 	//ErrNotFound not found in database
 	ErrNotFound = errors.New("models: resource not found")
+	//ErrInvalidID invaild id passed
+	ErrInvalidID = errors.New("models: Invalid id passed")
 )
 
 //UserService struct
@@ -32,7 +34,7 @@ func NewUserService(connectioninfo string) (*UserService, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.LogMode(false)
+	db.LogMode(true)
 	return &UserService{
 		db: db,
 	}, nil
@@ -60,6 +62,20 @@ func (us *UserService) Create(u *User) error {
 func (us *UserService) Update(u *User) error {
 
 	return us.db.Save(u).Error
+}
+
+//Delete user in user
+func (us *UserService) Delete(id uint) error {
+	if id == 0 {
+		return ErrInvalidID
+	}
+	u := User{
+		Model: gorm.Model{
+			ID: id,
+		},
+	}
+	return us.db.Delete(&u).Error
+
 }
 
 //ByID will look up by id provided

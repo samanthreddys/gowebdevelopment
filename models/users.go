@@ -83,9 +83,9 @@ func (us *UserService) LookByEmail(email string) (*User, error) {
 
 }
 
-// Function to return a single record from the input request
-func first(db *gorm.DB, user *User) error {
-	err := db.First(user).Error
+// Function to query db and return first record to dst , if nothing found in query return error not found
+func first(db *gorm.DB, dst interface{}) error {
+	err := db.First(dst).Error
 	switch err {
 	case nil:
 		return nil

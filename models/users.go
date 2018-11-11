@@ -11,9 +11,9 @@ import (
 //User struct for user model
 type User struct {
 	gorm.Model
-	FirstName string `json:"first_name,omitempty"`
-	LastName  string `json:"last_name,omitempty"`
-	Email     string `gorm:"not null; unique_index" json:"email,omitempty"`
+	FirstName string
+	LastName  string
+	Email     string `gorm:"not null; unique_index"`
 }
 
 var (

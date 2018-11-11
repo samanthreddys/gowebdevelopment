@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/samanthreddys/myweb.com/controllers"
+	"github.com/samanthreddys/myweb.com/models"
 )
 
 /* func pagenotfound(w http.ResponseWriter, r *http.Request) {
@@ -14,9 +16,23 @@ import (
 
 } */
 
+const (
+	host   = "localhost"
+	user   = "postgres"
+	port   = 5432
+	dbname = "clrpix_dev"
+)
+
 func main() {
+	psqlinfo := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable", host, port, user, dbname)
+	us, err := models.NewUserService(psqlinfo)
+	if err != nil {
+		panic(err)
+	}
+
+	defer us.Close()
 	staticC := controllers.NewStatic()
-	usersC := controllers.NewUsers()
+	usersC := controllers.NewUsers(us)
 
 	r := mux.NewRouter()
 	r.Handle("/", staticC.Home).Methods("GET")

@@ -3,6 +3,8 @@ package models
 import (
 	"errors"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/jinzhu/gorm"
 	//postgres dialect
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -11,9 +13,11 @@ import (
 //User struct for user model
 type User struct {
 	gorm.Model
-	FirstName string
-	LastName  string
-	Email     string `gorm:"not null; unique_index"`
+	FirstName    string
+	LastName     string
+	Email        string `gorm:"not null; unique_index"`
+	Password     string `gorm:"-"`
+	PasswordHash string `gorm:"not null"`
 }
 
 var (
@@ -65,7 +69,12 @@ func (us *UserService) AutoMigrate() error {
 
 //Create user in user
 func (us *UserService) Create(u *User) error {
-
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	u.PasswordHash = string(hashedBytes)
+	u.Password = ""
 	return us.db.Create(u).Error
 }
 

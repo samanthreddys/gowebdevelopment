@@ -32,6 +32,10 @@ type UserService struct {
 	db *gorm.DB
 }
 
+const (
+	userPasswordPepper = "mysecretstring"
+)
+
 //NewUserService to connect to db
 func NewUserService(connectioninfo string) (*UserService, error) {
 	db, err := gorm.Open("postgres", connectioninfo)
@@ -69,7 +73,8 @@ func (us *UserService) AutoMigrate() error {
 
 //Create user in user
 func (us *UserService) Create(u *User) error {
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	pwBytes := []byte(u.Password + userPasswordPepper)
+	hashedBytes, err := bcrypt.GenerateFromPassword(pwBytes, bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}

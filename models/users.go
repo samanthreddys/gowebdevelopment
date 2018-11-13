@@ -25,6 +25,10 @@ var (
 	ErrNotFound = errors.New("models: resource not found")
 	//ErrInvalidID invaild id passed
 	ErrInvalidID = errors.New("models: Invalid id passed")
+	// ErrInvaildPassword Invalid password provided
+	ErrInvaildPassword = errors.New("models: Incorrect Password provided")
+	//ErrInvaildEmail Invalid email provided
+	//ErrInvaildEmail = errors.New("models: Incorrect Email provided")
 )
 
 //UserService struct
@@ -136,4 +140,25 @@ func first(db *gorm.DB, dst interface{}) error {
 		return err
 	}
 
+}
+
+// Authenticate method is used to authenticate user login It returns user details or error incase of failure.
+func (us *UserService) Authenticate(email, password string) (*User, error) {
+	foundUser, err := us.LookByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+userPasswordPepper))
+	if err != nil {
+		switch err {
+		case bcrypt.ErrMismatchedHashAndPassword:
+			return nil, ErrInvaildPassword
+		default:
+			return nil, err
+
+		}
+
+	}
+	return foundUser, nil
 }

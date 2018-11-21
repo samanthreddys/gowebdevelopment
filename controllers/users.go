@@ -94,3 +94,13 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, &user)
 
 }
+
+//CookieTest is a test function used to view the cookie saved
+func (u *Users) CookieTest(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("email")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintln(w, cookie)
+}

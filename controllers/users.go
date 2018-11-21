@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/samanthreddys/myweb.com/rand"
+
 	"github.com/samanthreddys/myweb.com/models"
 
 	"github.com/samanthreddys/myweb.com/views"
@@ -58,7 +60,11 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	SetCookie(w, &user)
+	err := u.SetCookie(w, &user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	http.Redirect(w, r, "/cookietest", http.StatusFound)
 
 }
@@ -86,27 +92,44 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	SetCookie(w, user)
+	err = u.SetCookie(w, user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	http.Redirect(w, r, "/", http.StatusFound)
 
 }
 
 //CookieTest is a test function used to view the cookie saved
 func (u *Users) CookieTest(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("email")
+	cookie, err := r.Cookie("remember_token")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintf(w, "%+v", cookie)
+	fmt.Fprintf(w, "%+v", cookie.Value)
 }
 
 //SetCookie is used to set cookie for a web interaction
-func SetCookie(w http.ResponseWriter, user *models.User) {
+func (u *Users) SetCookie(w http.ResponseWriter, user *models.User) error {
+	if user.Remember == "" {
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		user.Remember = token
+		err = u.us.Update(user)
+		if err != nil {
+			return err
+		}
+
+	}
 	cookie := http.Cookie{
-		Name:  "email",
-		Value: user.Email,
+		Name:  "remember_token",
+		Value: user.Remember,
 	}
 	http.SetCookie(w, &cookie)
+	return nil
 
 }

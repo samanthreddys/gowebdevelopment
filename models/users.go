@@ -10,6 +10,7 @@ import (
 	//postgres dialect
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/samanthreddys/myweb.com/hash"
+	"github.com/samanthreddys/myweb.com/rand"
 )
 
 //User struct for user model
@@ -92,9 +93,16 @@ func (us *UserService) Create(u *User) error {
 	}
 	u.PasswordHash = string(hashedBytes)
 	u.Password = ""
-	if u.Remember != "" {
-		u.RememberHash = us.hmac.Hash(u.Remember)
+	if u.Remember == "" {
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		u.Remember = token
+
 	}
+	u.RememberHash = us.hmac.Hash(u.Remember)
+
 	return us.db.Create(u).Error
 }
 

@@ -39,28 +39,6 @@ func NewUsers(us *models.UserService) *Users {
 	}
 }
 
-/* //NewLogin  GET/NewLogin...
-// NewLogin Method to GET signup This is used to render a form when user click on a Sign In form
-func (u *Users) NewLogin(w http.ResponseWriter, r *http.Request) {
-
-	if err := u.LoginView.Render(w, nil); err != nil {
-		panic(err)
-
-	}
-
-}
-
-//New  GET/SignIn...
-// New Method to GET signup This is used to render a form when user click on a signup form
-func (u *Users) New(w http.ResponseWriter, r *http.Request) {
-
-	if err := u.NewView.Render(w, nil); err != nil {
-		panic(err)
-
-	}
-
-} */
-
 //Create Used to create user
 //POST SIGNUP
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
@@ -106,6 +84,13 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+		return
 	}
+	cookie := http.Cookie{
+		Name:  "email",
+		Value: user.Email,
+	}
+	http.SetCookie(w, &cookie)
+	fmt.Fprintln(w, &user)
 
 }

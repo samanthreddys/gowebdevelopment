@@ -1,6 +1,7 @@
 package models
 
 import (
+	//"os/user"
 	"errors"
 
 	"golang.org/x/crypto/bcrypt"
@@ -8,6 +9,7 @@ import (
 	"github.com/jinzhu/gorm"
 	//postgres dialect
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/samanthreddys/myweb.com/hash"
 )
 
 //User struct for user model
@@ -18,6 +20,8 @@ type User struct {
 	Email        string `gorm:"not null; unique_index"`
 	Password     string `gorm:"-"`
 	PasswordHash string `gorm:"not null"`
+	Remember     string `gorm:"-"`
+	RememberHash string `gorm:"not null;unique_index"`
 }
 
 var (
@@ -33,11 +37,13 @@ var (
 
 //UserService struct
 type UserService struct {
-	db *gorm.DB
+	db   *gorm.DB
+	hmac hash.HMAC
 }
 
 const (
 	userPasswordPepper = "mysecretstring"
+	hmacsecretkey      = "secrethmackey"
 )
 
 //NewUserService to connect to db
@@ -47,8 +53,10 @@ func NewUserService(connectioninfo string) (*UserService, error) {
 		return nil, err
 	}
 	db.LogMode(true)
+	hmac := hash.NewHMAC(hmacsecretkey)
 	return &UserService{
-		db: db,
+		db:   db,
+		hmac: hmac,
 	}, nil
 
 }
@@ -84,11 +92,17 @@ func (us *UserService) Create(u *User) error {
 	}
 	u.PasswordHash = string(hashedBytes)
 	u.Password = ""
+	if u.Remember != "" {
+		u.RememberHash = us.hmac.Hash(u.Remember)
+	}
 	return us.db.Create(u).Error
 }
 
 //Update user in user
 func (us *UserService) Update(u *User) error {
+	if u.Remember != "" {
+		u.RememberHash = us.hmac.Hash(u.Remember)
+	}
 
 	return us.db.Save(u).Error
 }
@@ -114,6 +128,16 @@ func (us *UserService) Delete(id uint) error {
 func (us *UserService) ByID(id uint) (*User, error) {
 	var user User
 	db := us.db.Where("id=?", id)
+	err := first(db, &user)
+	return &user, err
+
+}
+
+//ByRemember looks up user using a remember token
+func (us *UserService) ByRemember(token string) (*User, error) {
+	var user User
+	hashedToken := us.hmac.Hash(token)
+	db := us.db.Where("remember_hash=?", hashedToken)
 	err := first(db, &user)
 	return &user, err
 

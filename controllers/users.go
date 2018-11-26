@@ -32,6 +32,8 @@ type SignInForm struct {
 	Password string `schema:"Password"`
 }
 
+
+
 //NewUsers function
 func NewUsers(us *models.UserService) *Users {
 	return &Users{

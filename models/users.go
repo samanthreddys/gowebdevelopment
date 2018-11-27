@@ -24,13 +24,13 @@ type User struct {
 }
 
 
-//UserService struct
+//userService struct
 type userService struct {
 	UserDB
 }
-var _UserDB=&userGorm{}
 
 
+// userGorm struct
 
 type userGorm struct{
 	db *gorm.DB
@@ -38,12 +38,12 @@ type userGorm struct{
 
 }
 
-
+//UserValidator struct
 type UserValidator struct{
 	UserDB
 }
 
-
+var _UserDB=&userGorm{}
 var (
 	//ErrNotFound not found in database
 	ErrNotFound = errors.New("models: resource not found")

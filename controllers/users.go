@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"net/http"
+	http "net/http"
 
 	"github.com/samanthreddys/myweb.com/rand"
 

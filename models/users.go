@@ -11,6 +11,33 @@ import (
 	"github.com/samanthreddys/myweb.com/rand"
 )
 
+//UserDB is a interface
+type UserDB interface {
+	// methods to query single users by id, email and remember token
+	ByID(id uint)(*User,error)
+	LookByEmail(email string) (*User, error)
+	ByRemember(token string) (*User, error)
+
+	// Methods for altering users
+	Create(u *User) error
+	Update(u *User) error
+	Delete(id uint) error
+
+	//Used to close a DB connection
+	Close() error
+
+	//Migration Helpers
+	DestructiveReset() error
+	AutoMigrate() error
+
+}
+// UserService is as set of methods used to manipulate and work with user model
+type UserService interface {
+	//Authenticate will verify if the provided user and password are correct.
+	Authenticate(email, password string) (*User, error)
+	UserDB
+}
+
 //User struct for user model
 type User struct {
 	gorm.Model
@@ -59,32 +86,7 @@ const (
 	userPasswordPepper = "mysecretstring"
 	hmacsecretkey      = "secrethmackey"
 )
-//UserDB is a interface
-type UserDB interface {
-	// methods to query single users by id, email and remember token
-	ByID(id uint)(*User,error)
-	LookByEmail(email string) (*User, error)
-	ByRemember(token string) (*User, error)
 
-	// Methods for altering users
-	Create(u *User) error
-	Update(u *User) error
-	Delete(id uint) error
-
-	//Used to close a DB connection
-	Close() error
-
-	//Migration Helpers
-	DestructiveReset() error
-	AutoMigrate() error
-
-}
-// UserService is as set of methods used to manipulate and work with user model
-type UserService interface {
-	//Authenticate will verify if the provided user and password are correct.
-	Authenticate(email, password string) (*User, error)
-	UserDB
-}
 
 func (uv *UserValidator) ByID(id uint)(*User, error){
 	// Validate ID , if id<0 return invalid id

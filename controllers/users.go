@@ -15,7 +15,7 @@ import (
 type Users struct {
 	NewView   *views.View
 	LoginView *views.View
-	us        *models.UserService
+	us        models.UserService
 }
 
 // SignUpForm struct to hold sign up form values
@@ -35,7 +35,7 @@ type SignInForm struct {
 
 
 //NewUsers function
-func NewUsers(us *models.UserService) *Users {
+func NewUsers(us models.UserService) *Users {
 	return &Users{
 		NewView:   views.NewView("bootstrap", "users/signup"),
 		LoginView: views.NewView("bootstrap", "users/login"),

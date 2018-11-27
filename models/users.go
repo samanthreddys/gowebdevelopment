@@ -25,7 +25,7 @@ type User struct {
 
 
 //UserService struct
-type UserService struct {
+type userService struct {
 	UserDB
 }
 var _UserDB=&userGorm{}
@@ -79,6 +79,12 @@ type UserDB interface {
 	AutoMigrate() error
 
 }
+// UserService is as set of methods used to manipulate and work with user model
+type UserService interface {
+	//Authenticate will verify if the provided user and password are correct.
+	Authenticate(email, password string) (*User, error)
+	UserDB
+}
 
 func (uv *UserValidator) ByID(id uint)(*User, error){
 	// Validate ID , if id<0 return invalid id
@@ -89,7 +95,7 @@ func (uv *UserValidator) ByID(id uint)(*User, error){
 	return uv.UserDB.ByID(id)
 }
 
-func NewUserGorm(connectioninfo string)(*userGorm, error){
+func newUserGorm(connectioninfo string)(*userGorm, error){
 	db, err := gorm.Open("postgres", connectioninfo)
 	if err != nil {
 		return nil, err
@@ -103,12 +109,12 @@ func NewUserGorm(connectioninfo string)(*userGorm, error){
 	}
 
 //NewUserService to connect to db
-func NewUserService(connectioninfo string) (*UserService, error) {
-	ug,err:=NewUserGorm(connectioninfo)
+func NewUserService(connectioninfo string) (UserService, error) {
+	ug,err:=newUserGorm(connectioninfo)
 	if err!=nil{
 		return nil,err
 	}
-	return &UserService{
+	return &userService{
 		UserDB:&UserValidator{
 
 			UserDB:ug,
@@ -230,7 +236,7 @@ func first(db *gorm.DB, dst interface{}) error {
 }
 
 // Authenticate method is used to authenticate user login It returns user details or error incase of failure.
-func (us *UserService) Authenticate(email, password string) (*User, error) {
+func (us *userService) Authenticate(email, password string) (*User, error) {
 	foundUser, err := us.LookByEmail(email)
 	if err != nil {
 		return nil, err

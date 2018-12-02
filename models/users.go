@@ -57,17 +57,19 @@ type userService struct {
 }
 
 
+
 // userGorm struct
 
 type userGorm struct{
 	db *gorm.DB
-	hmac hash.HMAC
+
 
 }
 
 //UserValidator struct
 type UserValidator struct{
 	UserDB
+	hmac hash.HMAC
 }
 
 var _UserDB=&userGorm{}
@@ -97,16 +99,85 @@ func (uv *UserValidator) ByID(id uint)(*User, error){
 	return uv.UserDB.ByID(id)
 }
 
+
+
+func (uv *UserValidator) bycryptPassword(u *User)error{
+	if u.Password == ""{
+		return nil
+	}
+	pwBytes := []byte(u.Password + userPasswordPepper)
+	hashedBytes, err := bcrypt.GenerateFromPassword(pwBytes, bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	u.PasswordHash = string(hashedBytes)
+	u.Password = ""
+	return nil
+}
+
+type userValidatorFunc func(*User) error
+
+func runuserValidatorFunc(u *User,fns ...userValidatorFunc) error {
+	for _,fn := range fns{
+		if err:=fn(u);err!=nil{
+			return err
+		}
+	}
+	return nil
+}
+
+func (uv *UserValidator) Create(u *User) error {
+	if err:= runuserValidatorFunc(u,uv.bycryptPassword);err!=nil{
+		return err
+	}
+	if u.Remember == "" {
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		u.Remember = token
+
+	}
+	u.RememberHash = uv.hmac.Hash(u.Remember)
+
+	return uv.UserDB.Create(u)
+}
+
+//Update user in user
+func (uv *UserValidator) Update(u *User) error {
+	if u.Remember != "" {
+		u.RememberHash = uv.hmac.Hash(u.Remember)
+	}
+
+	return uv.UserDB.Update(u)
+}
+
+
+//Delete user in user
+func (uv *UserValidator) Delete(id uint) error {
+	if id == 0 {
+		return ErrInvalidID
+	}
+
+	return uv.UserDB.Delete(id)
+
+}
+
+func (uv *UserValidator) ByRemember(token string)(*User,error){
+	rememberhash := uv.hmac.Hash(token)
+	return	uv.UserDB.ByRemember(rememberhash)
+}
+
 func newUserGorm(connectioninfo string)(*userGorm, error){
 	db, err := gorm.Open("postgres", connectioninfo)
 	if err != nil {
 		return nil, err
 	}
 	db.LogMode(true)
-	hmac := hash.NewHMAC(hmacsecretkey)
+
 	return &userGorm{
 		db:   db,
-		hmac: hmac,
+
 	}, nil
 	}
 
@@ -116,10 +187,12 @@ func NewUserService(connectioninfo string) (UserService, error) {
 	if err!=nil{
 		return nil,err
 	}
+	hmac := hash.NewHMAC(hmacsecretkey)
 	return &userService{
 		UserDB:&UserValidator{
 
 			UserDB:ug,
+			hmac:hmac,
 		},
 	}, nil
 
@@ -149,40 +222,18 @@ func (ug *userGorm) AutoMigrate() error {
 
 //Create user in user
 func (ug *userGorm) Create(u *User) error {
-	pwBytes := []byte(u.Password + userPasswordPepper)
-	hashedBytes, err := bcrypt.GenerateFromPassword(pwBytes, bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	u.PasswordHash = string(hashedBytes)
-	u.Password = ""
-	if u.Remember == "" {
-		token, err := rand.RememberToken()
-		if err != nil {
-			return err
-		}
-		u.Remember = token
-
-	}
-	u.RememberHash = ug.hmac.Hash(u.Remember)
 
 	return ug.db.Create(u).Error
 }
 
 //Update user in user
 func (ug *userGorm) Update(u *User) error {
-	if u.Remember != "" {
-		u.RememberHash = ug.hmac.Hash(u.Remember)
-	}
-
 	return ug.db.Save(u).Error
 }
 
 //Delete user in user
 func (ug *userGorm) Delete(id uint) error {
-	if id == 0 {
-		return ErrInvalidID
-	}
+
 	u := User{
 		Model: gorm.Model{
 			ID: id,
@@ -205,10 +256,10 @@ func (ug *userGorm) ByID(id uint) (*User, error) {
 }
 
 //ByRemember looks up user using a remember token
-func (ug *userGorm) ByRemember(token string) (*User, error) {
+func (ug *userGorm) ByRemember(rememberhash string) (*User, error) {
 	var user User
-	hashedToken := ug.hmac.Hash(token)
-	db := ug.db.Where("remember_hash=?", hashedToken)
+
+	db := ug.db.Where("remember_hash=?", rememberhash)
 	err := first(db, &user)
 	return &user, err
 

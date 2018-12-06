@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samanthreddys/myweb.com/rand"
 	"golang.org/x/crypto/bcrypt"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 	//postgres dialect
@@ -146,6 +147,11 @@ func (uv *UserValidator) idGreaterThan(n uint) userValidatorFunc{
 	})
 }
 
+func (uv *UserValidator) normalizeEmail(u *User)error{
+	u.Email= strings.ToLower(u.Email)
+	u.Email= strings.TrimSpace(u.Email)
+	return nil
+}
 
 
 
@@ -163,7 +169,7 @@ func runuserValidatorFunc(u *User,fns ...userValidatorFunc) error {
 //Create func for user validatior
 func (uv *UserValidator) Create(u *User) error {
 
-	if err:= runuserValidatorFunc(u,uv.bycryptPassword,uv.defaultRemember,uv.hmacRemember);err!=nil{
+	if err:= runuserValidatorFunc(u,uv.bycryptPassword,uv.defaultRemember,uv.hmacRemember,uv.normalizeEmail);err!=nil{
 		return err
 	}
 
@@ -174,13 +180,23 @@ func (uv *UserValidator) Create(u *User) error {
 //Update user in user
 func (uv *UserValidator) Update(u *User) error {
 
-	if err:= runuserValidatorFunc(u,uv.bycryptPassword,uv.defaultRemember,uv.hmacRemember);err!=nil{
+	if err:= runuserValidatorFunc(u,uv.bycryptPassword,uv.defaultRemember,uv.hmacRemember,uv.normalizeEmail);err!=nil{
 		return err
 	}
 
 	return uv.UserDB.Update(u)
 }
 
+//LookByEmail will normailze email address to make it to lower case and remove spaces
+func (uv *UserValidator) LookByEmail(email string)( *User,error){
+	u:=User{
+		Email:email,
+	}
+	if err:=runuserValidatorFunc(&u,uv.normalizeEmail);err!=nil{
+		return nil,err
+	}
+	return uv.UserDB.LookByEmail(u.Email)
+}
 
 //Delete user in user
 func (uv *UserValidator) Delete(id uint) error{

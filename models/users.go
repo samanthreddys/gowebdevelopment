@@ -124,10 +124,24 @@ func (uv *UserValidator) hmacRemember(u *User)error{
 
 }
 
+func (uv *UserValidator) defaultRemember(u *User) error{
+	if u.Remember != "" {
+		return nil
+	}
+
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		u.Remember = token
+		return nil
+
+}
+
 
 
 type userValidatorFunc func(*User) error
-
+//runuserValidatiorFunc
 func runuserValidatorFunc(u *User,fns ...userValidatorFunc) error {
 	for _,fn := range fns{
 		if err:=fn(u);err!=nil{
@@ -136,18 +150,10 @@ func runuserValidatorFunc(u *User,fns ...userValidatorFunc) error {
 	}
 	return nil
 }
-
+//Create func for user validatior
 func (uv *UserValidator) Create(u *User) error {
-	if u.Remember == "" {
-		token, err := rand.RememberToken()
-		if err != nil {
-			return err
-		}
-		u.Remember = token
 
-	}
-
-	if err:= runuserValidatorFunc(u,uv.bycryptPassword,uv.hmacRemember);err!=nil{
+	if err:= runuserValidatorFunc(u,uv.bycryptPassword,uv.defaultRemember,uv.hmacRemember);err!=nil{
 		return err
 	}
 
@@ -158,7 +164,7 @@ func (uv *UserValidator) Create(u *User) error {
 //Update user in user
 func (uv *UserValidator) Update(u *User) error {
 
-	if err:= runuserValidatorFunc(u,uv.bycryptPassword,uv.hmacRemember);err!=nil{
+	if err:= runuserValidatorFunc(u,uv.bycryptPassword,uv.defaultRemember,uv.hmacRemember);err!=nil{
 		return err
 	}
 

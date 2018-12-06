@@ -137,10 +137,20 @@ func (uv *UserValidator) defaultRemember(u *User) error{
 		return nil
 
 }
+func (uv *UserValidator) idGreaterThan(n uint) userValidatorFunc{
+	return userValidatorFunc(func(u *User)error{
+		if u.ID<=n{
+			return ErrInvaildPassword
+		}
+		return nil
+	})
+}
+
 
 
 
 type userValidatorFunc func(*User) error
+
 //runuserValidatiorFunc
 func runuserValidatorFunc(u *User,fns ...userValidatorFunc) error {
 	for _,fn := range fns{
@@ -173,9 +183,12 @@ func (uv *UserValidator) Update(u *User) error {
 
 
 //Delete user in user
-func (uv *UserValidator) Delete(id uint) error {
-	if id == 0 {
-		return ErrInvalidID
+func (uv *UserValidator) Delete(id uint) error{
+	var u User
+	u.ID=id
+
+	if err:= runuserValidatorFunc(&u,uv.idGreaterThan(0));err!=nil{
+		return nil
 	}
 
 	return uv.UserDB.Delete(id)

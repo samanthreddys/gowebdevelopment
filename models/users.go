@@ -2,13 +2,13 @@ package models
 
 import (
 	"github.com/pkg/errors"
+	"github.com/samanthreddys/myweb.com/rand"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/jinzhu/gorm"
 	//postgres dialect
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/samanthreddys/myweb.com/hash"
-	"github.com/samanthreddys/myweb.com/rand"
 )
 
 //UserDB is a interface
@@ -115,6 +115,17 @@ func (uv *UserValidator) bycryptPassword(u *User)error{
 	return nil
 }
 
+func (uv *UserValidator) hmacRemember(u *User)error{
+	if u.Remember==""{
+		return nil
+	}
+	u.RememberHash=uv.hmac.Hash(u.Remember)
+	return nil
+
+}
+
+
+
 type userValidatorFunc func(*User) error
 
 func runuserValidatorFunc(u *User,fns ...userValidatorFunc) error {
@@ -127,9 +138,6 @@ func runuserValidatorFunc(u *User,fns ...userValidatorFunc) error {
 }
 
 func (uv *UserValidator) Create(u *User) error {
-	if err:= runuserValidatorFunc(u,uv.bycryptPassword);err!=nil{
-		return err
-	}
 	if u.Remember == "" {
 		token, err := rand.RememberToken()
 		if err != nil {
@@ -138,15 +146,20 @@ func (uv *UserValidator) Create(u *User) error {
 		u.Remember = token
 
 	}
-	u.RememberHash = uv.hmac.Hash(u.Remember)
+
+	if err:= runuserValidatorFunc(u,uv.bycryptPassword,uv.hmacRemember);err!=nil{
+		return err
+	}
+
 
 	return uv.UserDB.Create(u)
 }
 
 //Update user in user
 func (uv *UserValidator) Update(u *User) error {
-	if u.Remember != "" {
-		u.RememberHash = uv.hmac.Hash(u.Remember)
+
+	if err:= runuserValidatorFunc(u,uv.bycryptPassword,uv.hmacRemember);err!=nil{
+		return err
 	}
 
 	return uv.UserDB.Update(u)
@@ -164,8 +177,13 @@ func (uv *UserValidator) Delete(id uint) error {
 }
 
 func (uv *UserValidator) ByRemember(token string)(*User,error){
-	rememberhash := uv.hmac.Hash(token)
-	return	uv.UserDB.ByRemember(rememberhash)
+	user:=User{
+		Remember:token,
+	}
+	if err:= runuserValidatorFunc(&user,uv.hmacRemember);err!=nil{
+		return nil, err
+	}
+	return	uv.UserDB.ByRemember(user.RememberHash)
 }
 
 func newUserGorm(connectioninfo string)(*userGorm, error){
